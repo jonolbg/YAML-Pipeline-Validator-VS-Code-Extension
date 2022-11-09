@@ -3,6 +3,8 @@
 import * as vscode from 'vscode';
 import { MessageOptions } from 'vscode';
 const got = require('got');
+const {Base64} = require('js-base64');
+
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -45,15 +47,18 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			(async () => {
 				try {
-					await got.post('https://yamlpipelinesvalidatordev.azurewebsites.net/api/validate', {
+					// we need to post to Azure API here and create an output buffer.
+					// how to auth?
+					await got.post(projectUrl + '/_apis/pipelines/' + buildDefinitionId + '/runs?api-version=7.1-preview.1' , { 
+						headers: {
+							Authorization: 'Basic ' + Base64.encode(':' + pat)
+						},
 						json: {
-							yaml: documentText,
-							pat: pat,
-							projectUrl: projectUrl,
-							buildDefinitionId: buildDefinitionId
-
+							previewRun: true,
+							yamlOverride: documentText
 						}
 					});
+					//Do something more exciting that this :D
 					vscode.window.showInformationMessage('Valid YAML Pipeline');
 				}
 				catch (error) {
